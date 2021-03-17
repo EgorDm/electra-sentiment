@@ -22,6 +22,7 @@ from __future__ import print_function
 import configure_finetuning
 from finetune.classification import classification_tasks
 from finetune.qa import qa_tasks
+from finetune.sentiment import sentiment_tasks
 from finetune.tagging import tagging_tasks
 from model import tokenization
 
@@ -66,5 +67,7 @@ def get_task(config: configure_finetuning.FinetuningConfig, task_name,
     return qa_tasks.SearchQA(config, tokenizer)
   elif task_name == "chunk":
     return tagging_tasks.Chunking(config, tokenizer)
+  elif task_name == "sentiment":
+    return sentiment_tasks.SentimentTask(config)
   else:
     raise ValueError("Unknown task " + task_name)
