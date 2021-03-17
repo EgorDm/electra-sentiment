@@ -33,6 +33,10 @@ from pretrain import pretrain_helpers
 from util import training_utils
 from util import utils
 
+import wandb
+
+wandb.init(project="electra")
+
 
 class PretrainingModel(object):
   """Transformer pre-training using the replaced-token-detection task."""
@@ -424,13 +428,18 @@ def train_or_eval(config: configure_pretraining.PretrainingConfig):
 
   if config.do_train:
     utils.heading("Running training")
-    estimator.train(input_fn=pretrain_data.get_input_fn(config, True),
-                    max_steps=config.num_train_steps)
+    estimator.train(
+        input_fn=pretrain_data.get_input_fn(config, True),
+        max_steps=config.num_train_steps,
+        hooks=[wandb.tensorflow.WandbHook(steps_per_log=100)]
+    )
   if config.do_eval:
     utils.heading("Running evaluation")
     result = estimator.evaluate(
         input_fn=pretrain_data.get_input_fn(config, False),
-        steps=config.num_eval_steps)
+        steps=config.num_eval_steps,
+        hooks=[wandb.tensorflow.WandbHook(steps_per_log=100)]
+    )
     for key in sorted(result.keys()):
       utils.log("  {:} = {:}".format(key, str(result[key])))
     return result

@@ -33,6 +33,10 @@ from model import optimization
 from util import training_utils
 from util import utils
 
+import wandb
+
+wandb.init(project="sentiment")
+
 
 class FinetuningModel(object):
   """Finetuning model with support for multi-task training."""
@@ -180,7 +184,9 @@ class ModelRunner(object):
   def train(self):
     utils.log("Training for {:} steps".format(self.train_steps))
     self._estimator.train(
-        input_fn=self._train_input_fn, max_steps=self.train_steps)
+        input_fn=self._train_input_fn, max_steps=self.train_steps,
+        hooks=[wandb.tensorflow.WandbHook(steps_per_log=100)]
+    )
 
   def evaluate(self):
     return {task.name: self.evaluate_task(task) for task in self._tasks}
@@ -189,8 +195,10 @@ class ModelRunner(object):
     """Evaluate the current model."""
     utils.log("Evaluating", task.name)
     eval_input_fn, _ = self._preprocessor.prepare_predict([task], split)
-    results = self._estimator.predict(input_fn=eval_input_fn,
-                                      yield_single_examples=True)
+    results = self._estimator.predict(
+        input_fn=eval_input_fn, yield_single_examples=True,
+        hooks=[wandb.tensorflow.WandbHook(steps_per_log=100)]
+    )
     scorer = task.get_scorer()
     for r in results:
       if r["task_id"] != len(self._tasks):  # ignore padding examples
