@@ -20,6 +20,8 @@ from __future__ import division
 from __future__ import print_function
 
 import collections
+import gc
+import itertools
 import os
 import random
 import numpy as np
@@ -74,10 +76,9 @@ class Preprocessor(object):
       utils.log("Existing tfrecords not found so creating")
       examples = []
       for task in tasks:
-        task_examples = task.get_examples(split)
-        examples += task_examples
-      if is_training:
-        random.shuffle(examples)
+        examples = itertools.chain(examples, task.get_examples(split))
+      # if is_training:
+      #   random.shuffle(examples)
       utils.mkdir(tfrecords_path.rsplit("/", 1)[0])
       n_examples = self.serialize_examples(
           examples, is_training, tfrecords_path, batch_size)
@@ -94,11 +95,16 @@ class Preprocessor(object):
   def serialize_examples(self, examples, is_training, output_file, batch_size):
     """Convert a set of `InputExample`s to a TFRecord file."""
     n_examples = 0
-    with tf.io.TFRecordWriter(output_file) as writer:
+    with tf.io.TFRecordWriter(
+            output_file,
+            options=tf.io.TFRecordOptions(
+              compression_type=tf.io.TFRecordCompressionType.GZIP
+            )
+    ) as writer:
       for (ex_index, example) in enumerate(examples):
         if ex_index % 2000 == 0:
-          utils.log("Writing example {:} of {:}".format(
-              ex_index, len(examples)))
+          utils.log("Writing example {:} of {:}".format(ex_index, -1))
+          gc.collect()
         for tf_example in self._example_to_tf_example(
             example, is_training,
             log=self._config.log_examples and ex_index < 1):
@@ -148,7 +154,7 @@ class Preprocessor(object):
 
     def input_fn(params):
       """The actual input function."""
-      d = tf.data.TFRecordDataset(input_file)
+      d = tf.data.TFRecordDataset(input_file, compression_type="GZIP")
       if is_training:
         d = d.repeat()
         d = d.shuffle(buffer_size=100)
