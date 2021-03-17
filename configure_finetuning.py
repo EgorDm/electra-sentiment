@@ -39,7 +39,7 @@ class FinetuningConfig(object):
 
     # model
     self.model_size = "small"  # one of "small", "base", or "large"
-    self.task_names = ["chunk"]  # which tasks to learn
+    self.task_names = ["sentiment"]  # which tasks to learn
     # override the default transformer hparams for the provided model size; see
     # modeling.BertConfig for the possible hparams and util.training_utils for
     # the defaults
