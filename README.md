@@ -1,4 +1,5 @@
-# ELECTRA
+# ELECTRA-sentiment
+Fork of [electra](https://github.com/google-research/electra) model designed to pretrain and/or finetune nlp models to generate sentiment predictions based on computed text embeddings of the input documents.
 
 ## Introduction
 
