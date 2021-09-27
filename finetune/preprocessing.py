@@ -110,11 +110,11 @@ class Preprocessor(object):
             log=self._config.log_examples and ex_index < 1):
           writer.write(tf_example.SerializeToString())
           n_examples += 1
-      # add padding so the dataset is a multiple of batch_size
-      while n_examples % batch_size != 0:
-        writer.write(self._make_tf_example(task_id=len(self._config.task_names))
-                     .SerializeToString())
-        n_examples += 1
+      # add padding so the dataset is a multiple of batch_size (causes errors at finetuning)
+      # while n_examples % batch_size != 0:
+      #   writer.write(self._make_tf_example(task_id=len(self._config.task_names))
+      #                .SerializeToString())
+      #   n_examples += 1
     return n_examples
 
   def _example_to_tf_example(self, example, is_training, log=False):
@@ -172,7 +172,9 @@ class Preprocessor(object):
     # tf.Example only supports tf.int64, but the TPU only supports tf.int32.
     # So cast all int64 to int32.
     for name, tensor in example.items():
-      if tensor.dtype == tf.int64:
+      if 'eid' in name:
+        example[name] = tensor
+      elif tensor.dtype == tf.int64:
         example[name] = tf.cast(tensor, tf.int32)
       else:
         example[name] = tensor

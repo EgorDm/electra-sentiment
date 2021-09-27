@@ -35,9 +35,6 @@ from util import utils
 
 import wandb
 
-wandb.init(project="sentiment")
-
-
 class FinetuningModel(object):
   """Finetuning model with support for multi-task training."""
 
@@ -225,7 +222,8 @@ class ModelRunner(object):
         task_name = self._config.task_names[r["task_id"]]
         logits[task_name][r[task_name]["eid"]] = (
             r[task_name]["logits"] if "logits" in r[task_name]
-            else r[task_name]["predictions"])
+            else r[task_name]["predictions"]
+        )
     for task_name in logits:
       utils.log("Pickling predictions for {:} {:} examples ({:})".format(
           len(logits[task_name]), task_name, split))
@@ -254,6 +252,7 @@ def write_results(config: configure_finetuning.FinetuningConfig, results):
 
 def run_finetuning(config: configure_finetuning.FinetuningConfig):
   """Run finetuning."""
+  wandb.init(project="sentiment")
 
   # Setup for training
   results = []

@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 
 import configure_finetuning
@@ -28,11 +30,12 @@ class SentimentTask(task.Task):
 
         predictions = tf.layers.dense(reprs, self.n_outputs)
         targets = features["targets"]
-        losses = tf.keras.losses.mean_squared_error(targets, predictions)
+        losses = tf.keras.losses.mean_absolute_error(targets, predictions)
         outputs = dict(
             loss=losses,
             predictions=predictions,
             targets=targets,
+            input_ids=features['input_ids'],
             eid=features["eid"]
         )
         return losses, outputs
@@ -41,7 +44,7 @@ class SentimentTask(task.Task):
         return classification_metrics.RegressionScorer()
 
     def get_examples(self, split):
-        table = pd.read_parquet('./sentiment_dataset/train')
+        table = pd.read_parquet(os.path.join('./sentiment_dataset', split))
         for i, row in table.iterrows():
             eid, input_ids, labels = row[['_id', 'input_ids', 'labels']]
             yield SentimentExample(eid, input_ids, labels)
